@@ -18,6 +18,10 @@
           <font-awesome-icon icon="store" />
           <span v-if="!isCollapsed">Shop</span>
         </router-link>
+        <router-link to="/admin/shop-logs">
+          <font-awesome-icon icon="cart-shopping" />
+          <span v-if="!isCollapsed">Shop Logs</span>
+        </router-link>
         <router-link to="/admin/news">
           <font-awesome-icon icon="newspaper" />
           <span v-if="!isCollapsed">News</span>

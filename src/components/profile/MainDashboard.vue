@@ -152,10 +152,6 @@ main-dashboard {
   gap: 0.4rem;
 }
 
-.icon {
-  width: 20px;
-  height: 20px;
-}
 
 .icon {
   width: 20px;

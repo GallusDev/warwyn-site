@@ -90,6 +90,11 @@ const routes = [
                 meta: { title: 'Shop | Warwyn Admin' }
             },
             {
+                path: 'shop-logs',
+                component: () => import('../components/admin/AdminShopLogs.vue'),
+                meta: { title: 'Shop Logs | Warwyn Admin' }
+            },
+            {
                 path: 'news',
                 component: () => import ('../components/admin/AdminNews.vue'),
                 meta: { title: 'News | Warwyn Admin' }

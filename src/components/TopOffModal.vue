@@ -9,11 +9,11 @@
         </label>
 
         <p class="price">Price: ${{ (amount * unitPrice / 100).toFixed(2) }}</p>
-        <p class="limits">MIN. PURCHASE: 500 | MAX. PURCHASE: 50000</p>
+        <p class="limits">MIN. PURCHASE: 500 | MAX. PURCHASE: 50,000</p>
 
         <label class="terms">
           <input type="checkbox" v-model="agreed" />
-          I agree to the <a href="/terms" target="_blank">termse</a> and understand that I purchase at my own risk.
+          I agree to the terms and understand that I purchase at my own risk.
         </label>
 
         <div class="modal-actions">
@@ -76,9 +76,14 @@ input[type="number"] {
 .terms {
   margin-top: 10px;
   font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 5px; /* Ensures spacing between checkbox and text */
 }
+
 .terms input {
-  margin-right: 5px;
+  max-width: 20px;
+  margin: 0;
 }
 .price, .limits {
   margin-top: 10px;

@@ -24,6 +24,7 @@
       <h2>Latest News</h2>
       <div class="mosaic-grid">
         <div class="news-mosaic" v-for="(news, index) in newsPosts" :key="index">
+          <div class="news-date">{{ formatDate(news.createdAt) }}</div>
           <img :src="news.icon" alt="icon" class="news-icon" />
           <h3>{{ news.title }}</h3>
           <p>
@@ -48,12 +49,21 @@ import skillContractsIcon from '../assets/imgs/features/skill_contracts.png'
 
 const features = [
   { icon: questsIcon, title: '35+ Quests' },
-  { icon: devIcon, title: 'Ongoing Development' },
+  //{ icon: devIcon, title: 'Ongoing Development' },
   { icon: bossingIcon, title: 'Ferocious Bosses' },
   { icon: skillContractsIcon, title: 'Skilling Contracts' },
 ]
 
 const newsPosts = ref([])
+
+function formatDate(date) {
+  if (!date) return 'Unknown date'
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  }).format(date)
+}
 
 const fetchNewsPosts = async () => {
   const q = query(
@@ -71,7 +81,8 @@ const fetchNewsPosts = async () => {
       id: doc.id,
       title: data.title,
       icon: data.displayImage,
-      teaser: `${teaser}... `
+      teaser: `${teaser}... `,
+      createdAt: data.createdAt?.toDate?.() || null
     }
   })
 }
@@ -172,6 +183,8 @@ onMounted(fetchNewsPosts)
   break-inside: avoid;
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
   transition: transform 0.2s ease;
+  position: relative;
+  padding-top: 2rem;
 }
 
 .news-mosaic:hover {
@@ -179,10 +192,20 @@ onMounted(fetchNewsPosts)
 }
 
 .news-icon {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
   margin-bottom: 0.5rem;
+}
+
+.news-date {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: var(--text-light);
+  opacity: 0.7;
 }
 
 @media (max-width: 1024px) {

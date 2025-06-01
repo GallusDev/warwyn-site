@@ -4,7 +4,7 @@
       <div class="shop-header">
         <h2>Warwyn Store</h2>
         <div class="balance-box">
-          <span>Balance: {{ balance }} WC</span>
+          <span>Balance: {{ balance.toLocaleString() }} <img :src="wyncoinIcon" alt="Wyncoins" class="icon"/></span>
           <button @click="showTopoff = true">Top Off</button>
         </div>
       </div>
@@ -31,15 +31,15 @@ import {db, auth} from '../firebase.js';
 
 import TopOffModal from "../components/TopOffModal.vue";
 
+let authData = ref({});
 const showTopoff = ref(false);
-
 const shopItems = ref([]);
 const loading = ref(true);
 const balance = ref(0);
+const wyncoinIcon = 'https://cdn-icons-png.flaticon.com/512/8810/8810527.png'
 
 const handleTopoff = async (amount) => {
   showTopoff.value = false;
-
   const priceInCents = Math.round((amount / 100) * 100); // 100 wyncoins = $1 => price in cents
 
   try {
@@ -52,7 +52,7 @@ const handleTopoff = async (amount) => {
         image: 'https://cdn-icons-png.flaticon.com/512/8810/8810527.png',
         price: priceInCents,
         amount: amount,
-        userId: auth.currentUser.uid
+        userId: authData.value.username.toLowerCase()
       })
     });
 
@@ -78,47 +78,45 @@ const fetchShopItems = async () => {
   }
 };
 
-const fetchBalance = async () => {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  try {
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    if (userDoc.exists()) {
-      balance.value = userDoc.data().wyncoins || 0;
-    }
-  } catch (e) {
-    console.error('Failed to fetch user balance:', e);
-  }
-};
-
 const buy = async (item) => {
+  const cBal = balance.value;
+  const price = item.price;
+  const username = authData.value.username;
+
+  if (cBal < price) {
+    alert(`You don't have enough Wyncoins to purchase this.\nTry topping off!`);
+    return;
+  }
+
   try {
-    const res = await fetch('http://localhost:3000/api/shop/create-checkout-session', {
+    const res = await fetch('http://localhost:3000/api/shop/buy', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
-        name: item.name,
-        description: item.description,
-        image: encodeURI(item.image.trim()),
-        price: item.price
+        username: username,
+        itemId: item.id,
+        igId: item.itemId,
+        itemName: item.name,
+        price: price
       })
     });
 
     const data = await res.json();
-    if (!data.url) throw new Error("No URL returned from Stripe");
-    window.location.href = data.url;
+    if (!res.ok) throw new Error(data.message || 'Unknown error');
+
+    alert(`You successfully purchased ${item.name}!`);
   } catch (err) {
-    console.error("Error during checkout:", err);
-    alert("Something went wrong: " + err.message);
+    console.error("Error during purchase:", err);
+    alert("Purchase failed: " + err.message);
   }
 };
 
 // On page load or useEffect-like block
-onMounted(() => {
+onMounted(async () => {
   fetchShopItems(); // initial fetch for fallback
 
-  // Listen for realtime shop updates
+  // Subscribe to real-time updates on "shop"
   const shopCollection = collection(db, 'shop');
   onSnapshot(shopCollection, (snapshot) => {
     shopItems.value = snapshot.docs
@@ -126,14 +124,28 @@ onMounted(() => {
         .filter(item => item.enabled !== false);
   })
 
-  const user = auth.currentUser;
-  if (user) {
-    const userDocRef = doc(db, 'users', user.uid);
+  try {
+    const authRes = await fetch('http://localhost:3000/auth/verify', {
+      credentials: 'include'
+    });
+    if (!authRes.ok) throw new Error('Not logged in');
+
+    authData.value = await authRes.json();
+    // assume authData.username is the actual username string
+    const usernameLower = authData.value.username.toLowerCase();
+
+    // Now listen on 'users/{usernameLower}'
+    const userDocRef = doc(db, 'users', usernameLower);
     onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         balance.value = docSnap.data().wyncoins || 0;
+      } else {
+        // If the user doc doesn't exist yet, show 0
+        balance.value = 0;
       }
     });
+  } catch (err) {
+    console.warn('User not logged in; skipping balance listener.');
   }
 
   const query = new URLSearchParams(window.location.search);
@@ -192,5 +204,11 @@ onMounted(() => {
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.icon {
+  width: 25px;
+  height: 25px;
+  vertical-align: middle;
 }
 </style>

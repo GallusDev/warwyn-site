@@ -2,7 +2,7 @@
   <div class="container">
     <div class="hiscores-wrapper">
       <!-- Desktop sidebar -->
-      <aside v-if="!selectedPlayer" class="sidebar desktop-only">
+      <aside v-if="!selectedPlayer && !playerCompare1 && !playerCompare2" class="sidebar desktop-only">
         <ul>
           <li
               v-for="skill in skillList"
@@ -23,11 +23,11 @@
       </div>
 
       <div class="hiscores-table">
-        <h4 v-if="selectedPlayer" @click="backToList" class="back-link"><font-awesome-icon :icon="['fas', 'chevron-left']" /> Back to Hiscores</h4>
-        <h2 v-if="!selectedPlayer">{{ selectedSkill }} Hiscores</h2>
-        <h2 v-else>{{ selectedPlayer.username }}'s Stats</h2>
+        <h4 v-if="selectedPlayer && !playerCompare1 && !playerCompare2" @click="backToList" class="back-link"><font-awesome-icon :icon="['fas', 'chevron-left']" /> Back to Hiscores</h4>
+        <h2 v-if="!selectedPlayer && !playerCompare1 && !playerCompare2">{{ selectedSkill }} Hiscores</h2>
+        <h2 v-if="selectedPlayer">{{ selectedPlayer.username }}'s Stats</h2>
 
-        <table v-if="!selectedPlayer">
+        <table v-if="!selectedPlayer && !playerCompare1 && !playerCompare2">
           <thead>
           <tr>
             <th>Rank</th>
@@ -56,7 +56,7 @@
           </tbody>
         </table>
 
-        <div v-else class="player-details">
+        <div v-if="selectedPlayer" class="player-details">
           <p class="player-summary">
             Overall Rank: {{ getOverallRank(selectedPlayer.username) }} |
             Total Level: {{ typeof selectedPlayer.totalLevel === 'number' ? selectedPlayer.totalLevel : 'N/A' }} |
@@ -64,8 +64,6 @@
               typeof selectedPlayer.totalExp === 'number' ? selectedPlayer.totalExp.toLocaleString() : 'N/A'
             }}
           </p>
-
-<!--          <button @click="backToList">Back to Hiscores</button>-->
 
           <table>
             <thead>
@@ -86,7 +84,79 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Show comparison view -->
+        <div v-if="playerCompare1 && playerCompare2" class="compare-details">
+          <h4 @click="clearComparison" class="back-link">
+            <font-awesome-icon :icon="['fas', 'chevron-left']" /> Back to Hiscores
+          </h4>
+          <h2>Comparing {{ playerCompare1.username }} vs {{ playerCompare2.username }}</h2>
+
+          <table class="compare-table">
+            <thead>
+            <tr>
+              <th>{{ playerCompare1.username }}</th>
+              <th></th>
+              <th>{{ playerCompare2.username }}</th>
+            </tr>
+            <tr>
+              <th>Level / XP</th>
+              <th>Skill</th>
+              <th>Level / XP</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="skill in skillList.slice(1)" :key="skill">
+              <td>
+                {{ getStat(playerCompare1, skill).level }} /
+                {{ getStat(playerCompare1, skill).experience.toLocaleString() }}
+              </td>
+              <td class="centered-skill">
+                <img
+                    v-if="compareStats(skill) === 'equal'"
+                    src="https://www.runescape.com/img/rsp777/hiscores/arrowequal.gif"
+                    alt="equal"
+                />
+                <img
+                    v-else-if="compareStats(skill) === 'up'"
+                    src="https://www.runescape.com/img/rsp777/hiscores/arrowup2.gif"
+                    alt="up"
+                />
+                <img
+                    v-else
+                    src="https://www.runescape.com/img/rsp777/hiscores/arrowdown2.gif"
+                    alt="down"
+                />
+                <br />
+                {{ skill }}
+              </td>
+              <td>
+                {{ getStat(playerCompare2, skill).level }} /
+                {{ getStat(playerCompare2, skill).experience.toLocaleString() }}
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <!-- Right-side aside -->
+      <aside v-if="!selectedPlayer && !playerCompare1 && !playerCompare2" class="right-sidebar desktop-only">
+        <!-- Search Card -->
+        <div class="form-group">
+          <label for="searchPlayer" class="card-title">Search by Name</label>
+          <input id="searchPlayer" v-model="searchName" placeholder="Enter player name" />
+          <button @click="searchPlayer">Search</button>
+        </div>
+
+        <!-- Compare Card -->
+        <div class="form-group" style="margin-top: 1rem;">
+          <label class="card-title">Compare Users</label>
+          <input v-model="compareUser1" placeholder="Player 1" />
+          <input v-model="compareUser2" placeholder="Player 2" style="margin-top: 0.5rem;" />
+          <button @click="comparePlayers" style="margin-top: 0.5rem;">Compare</button>
+        </div>
+      </aside>
     </div>
   </div>
 </template>
@@ -99,6 +169,12 @@ const selectedPlayer = ref(null);
 const selectedSkill = ref('Overall')
 
 const hiscores = ref([])
+
+const searchName = ref('')
+const compareUser1 = ref('')
+const compareUser2 = ref('')
+const playerCompare1 = ref(null);
+const playerCompare2 = ref(null);
 
 const skillList = [
   'Overall', 'Attack', 'Defence', 'Strength', 'Hitpoints', 'Ranged', 'Prayer', 'Magic',
@@ -115,8 +191,6 @@ const fetchHiscores = async () => {
       console.error("Expected hiscores to be an array, got:", data);
       return;
     }
-
-    console.log(data);
 
     hiscores.value = data;
   } catch (err) {
@@ -154,6 +228,65 @@ const displayedScores = computed(() => {
     });
   }
 });
+
+const searchPlayer = () => {
+  const name = searchName.value.trim();
+  if (name) {
+    showPlayer(name);
+  }
+}
+
+
+const getStat = (player, skill) => {
+  const stat = player.playerStats?.find(s => s.skill === skill);
+  return {
+    level: stat?.level ?? 1,
+    experience: stat?.experience ?? 0
+  }
+}
+
+const compareStats = (skill) => {
+  const stat1 = getStat(playerCompare1.value, skill);
+  const stat2 = getStat(playerCompare2.value, skill);
+
+  if (stat1.level === stat2.level && stat1.experience === stat2.experience) {
+    return 'equal';
+  } else if (
+      stat2.level > stat1.level ||
+      (stat2.level === stat1.level && stat2.experience > stat1.experience)
+  ) {
+    return 'up';
+  } else {
+    return 'down';
+  }
+};
+
+const clearComparison = () => {
+  playerCompare1.value = null;
+  playerCompare2.value = null;
+};
+
+function comparePlayers() {
+  const user1 = compareUser1.value.trim();
+  const user2 = compareUser2.value.trim();
+
+  if (!user1 || !user2) {
+    alert("Please enter both player names.");
+    return;
+  }
+
+  const found1 = hiscores.value.find(p => p.username.toLowerCase() === user1.toLowerCase());
+  const found2 = hiscores.value.find(p => p.username.toLowerCase() === user2.toLowerCase());
+
+  if (!found1 || !found2) {
+    alert("One or both players not found.");
+    return;
+  }
+
+  selectedPlayer.value = null; // Exit out of single-player view if active
+  playerCompare1.value = found1;
+  playerCompare2.value = found2;
+}
 
 // helper function
 function pStat(player, skillName) {
@@ -371,5 +504,44 @@ td {
 .skill-dropdown option:checked {
   background-color: var(--accent);
   color: var(--on-accent, #000);
+}
+
+.right-sidebar {
+  width: 250px;
+  background-color: var(--bg-dark);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.card-title {
+  font-weight: bold;
+  color: var(--text-light);
+}
+
+.form-group {
+  background: linear-gradient(135deg, rgba(30, 30, 30, 0.6), rgba(50, 50, 50, 0.4));
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex: 1 1 30%;
+  min-width: 200px;
+  padding: 1.2rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.05), 0 6px 16px rgba(0, 0, 0, 0.3);
+  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-darker);
+  color: var(--text-light);
 }
 </style>
