@@ -55,7 +55,7 @@ frontend/ → Vue 3 + Vite-based UI
 
 backend/ → Node.js + Express API
 
-functions/ → Firebase Cloud Functions (if applicable)
+functions/ → Firebase Cloud Functions
 
 redis/ → Redis config for job queue
 
