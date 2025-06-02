@@ -6,6 +6,8 @@ import Hiscores from '../views/Hiscores.vue';
 import Shop from "../views/Shop.vue";
 import Admin from "../views/AdminDashboard.vue";
 import News from "../views/NewsPostPage.vue";
+import PollList from "../views/PollsList.vue";
+import PollDetails from "../views/PollDetails.vue";
 
 const routes = [
     {
@@ -13,6 +15,19 @@ const routes = [
         name: 'Home',
         component: Home,
         meta: { title: 'Warwyn - Home' }
+    },
+    {
+        path: '/polls',
+        name: 'PollList',
+        component: PollList,
+        meta: { title: 'Warwyn Polls' }
+    },
+    {
+        path: '/polls/:id',
+        name: 'PollDetails',
+        component: PollDetails,
+        props: true,
+        meta: { title: 'Warwyn Poll' }
     },
     {
         path: '/news/:id',
@@ -85,6 +100,11 @@ const routes = [
                 meta: { title: 'Users | Warwyn Admin' }
             },
             {
+                path: '/admin/manage/:username',
+                component: () => import ('../components/admin/AdminManageUser.vue'),
+                meta: { title: 'Manage User | Warwyn Admin' }
+            },
+            {
                 path: 'shop',
                 component: () => import ('../components/admin/AdminShop.vue'),
                 meta: { title: 'Shop | Warwyn Admin' }
@@ -109,6 +129,11 @@ const routes = [
                 component: () => import('../components/admin/NewsPostEditor.vue'),
                 props: true,
                 meta: { title: 'News Editor | Warwyn Admin' }
+            },
+            {
+                path: 'polls',
+                component: () => import('../components/admin/AdminPolls.vue'),
+                meta: { title: 'Polls | Warwyn Admin' }
             },
             {
                 path: 'contracts',

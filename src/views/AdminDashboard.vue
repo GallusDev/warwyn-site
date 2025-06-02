@@ -26,6 +26,10 @@
           <font-awesome-icon icon="newspaper" />
           <span v-if="!isCollapsed">News</span>
         </router-link>
+        <router-link to="/admin/polls">
+          <font-awesome-icon icon="square-poll-vertical" />
+          <span v-if="!isCollapsed">Polls</span>
+        </router-link>
         <router-link to="/admin/contracts">
           <font-awesome-icon icon="scroll" />
           <span v-if="!isCollapsed">Contracts</span>

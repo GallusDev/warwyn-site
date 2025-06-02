@@ -9,9 +9,9 @@ import '@vueup/vue-quill/dist/vue-quill.snow.css';
 // Font Awesome Setup
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faTachometerAlt, faUsers, faStore, faGift, faChevronLeft, faChevronRight, faScroll, faNewspaper, faCartShopping } from '@fortawesome/free-solid-svg-icons'
+import { faTachometerAlt, faUsers, faStore, faGift, faChevronLeft, faChevronRight, faScroll, faNewspaper, faCartShopping, faSquarePollVertical } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faTachometerAlt, faUsers, faStore, faGift, faChevronLeft, faChevronRight, faScroll, faNewspaper, faCartShopping)
+library.add(faTachometerAlt, faUsers, faStore, faGift, faChevronLeft, faChevronRight, faScroll, faNewspaper, faCartShopping, faSquarePollVertical)
 
 // Navigation Guard
 router.beforeEach(async (to, from, next) => {

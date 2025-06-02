@@ -9,7 +9,14 @@
 
       <nav :class="{ open: menuOpen }">
         <router-link to="/" @click="closeMenu" :class="{ active: $route.path === '/' }">Home</router-link>
+        <a target="_blank" href="https://discord.gg/gEQS7BEX69">Discord</a>
         <router-link to="/hiscores" @click="closeMenu" :class="{ active: $route.path === '/hiscores' }">Hiscores</router-link>
+        <router-link
+            v-if="isLoggedIn"
+            to="/polls"
+            @click="closeMenu"
+            :class="{ active: $route.path === '/polls' }"
+        >Polls</router-link>
         <router-link to="/shop" @click="closeMenu" :class="{ active: $route.path === '/shop' }">Shop</router-link>
 
         <router-link
